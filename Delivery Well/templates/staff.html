@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">新员工录入</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('staff_management') }}">
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-control" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">所属车队</label>
+                        <select class="form-select" name="fleet_id" required>
+                            {% for fleet in fleets %}
+                            <option value="{{ fleet.FleetID }}">{{ fleet.fleet_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">角色</label>
+                        <select class="form-select" name="role_type" id="roleSelect" onchange="toggleLicense()" required>
+                            <option value="Driver">司机 (Driver)</option>
+                            <option value="Manager">调度主管 (Manager)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="licenseField">
+                        <label class="form-label">驾照等级</label>
+                        <select class="form-select" name="license_level">
+                            <option value="A1">A1</option>
+                            <option value="A2">A2</option>
+                            <option value="B1">B1</option>
+                            <option value="B2">B2</option>
+                            <option value="C1">C1</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">联系方式</label>
+                        <input type="text" class="form-control" name="contact_number">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">录入系统</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">员工列表</div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>工号</th>
+                            <th>姓名</th>
+                            <th>角色</th>
+                            <th>车队</th>
+                            <th>驾照</th>
+                            <th>电话</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_list %}
+                        <tr>
+                            <td>{{ staff.StaffID }}</td>
+                            <td>{{ staff.full_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'info' if staff.role_type == 'Driver' else 'warning' }}">
+                                    {{ staff.role_type }}
+                                </span>
+                            </td>
+                            <td>{{ staff.fleet_name }}</td>
+                            <td>{{ staff.license_level if staff.license_level else '-' }}</td>
+                            <td>{{ staff.contact_number }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleLicense() {
+    var role = document.getElementById("roleSelect").value;
+    var licenseDiv = document.getElementById("licenseField");
+    if (role === "Manager") {
+        licenseDiv.style.display = "none";
+    } else {
+        licenseDiv.style.display = "block";
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">新车辆录入</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('vehicle_management') }}">
+                    <div class="mb-3">
+                        <label class="form-label">车牌号</label>
+                        <input type="text" class="form-control" name="plate_number" placeholder="京A-88888" pattern="^[\u4e00-\u9fa5]{1}[A-Z]{1}-[A-Z0-9]{5}$" title="格式示例: 京A-88888" required>
+                        <div class="form-text">必须符合车牌格式</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">所属车队</label>
+                        <select class="form-select" name="fleet_id" required>
+                            {% for fleet in fleets %}
+                            <option value="{{ fleet.FleetID }}">{{ fleet.fleet_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">最大载重 (kg)</label>
+                        <input type="number" step="0.01" class="form-control" name="max_weight" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">最大容积 (m³)</label>
+                        <input type="number" step="0.01" class="form-control" name="max_volume" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">录入车辆</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">车辆档案与状态</div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>车牌</th>
+                            <th>车队</th>
+                            <th>状态</th>
+                            <th>载重上限</th>
+                            <th>容积上限</th>
+                            <th>当前任务数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in vehicles %}
+                        <tr>
+                            <td>{{ vehicle.PlateNumber }}</td>
+                            <td>{{ vehicle.fleet_name }}</td>
+                            <td>
+                                {% if vehicle.current_status == 'Idle' %}
+                                    <span class="badge bg-success">空闲</span>
+                                {% elif vehicle.current_status == 'InTransit' %}
+                                    <span class="badge bg-primary">运输中</span>
+                                {% elif vehicle.current_status == 'Maintenance' %}
+                                    <span class="badge bg-warning">维修中</span>
+                                {% elif vehicle.current_status == 'Exception' %}
+                                    <span class="badge bg-danger">异常</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ vehicle.max_weight_kg }} kg</td>
+                            <td>{{ vehicle.max_volume_m3 }} m³</td>
+                            <td>{{ vehicle.active_orders }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- 车队资源状态 -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>车队资源实时状态查询</span>
+                <form class="d-flex" action="{{ url_for('reports') }}" method="get">
+                    <select name="center_id" class="form-select form-select-sm me-2" style="width: 200px;">
+                        <option value="all">所有配送中心</option>
+                        {% for c in centers %}
+                        <option value="{{ c.CenterID }}" {{ 'selected' if current_center == c.CenterID|string else '' }}>{{ c.location_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">筛选</button>
+                </form>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>车队</th>
+                            <th>车牌</th>
+                            <th>当前状态</th>
+                            <th>车辆容量 (kg)</th>
+                            <th>车辆容积 (m³)</th>
+                            <th>当前已载 (kg / m³)</th>
+                            <th>负载率 (重量)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in fleet_status %}
+                        <tr>
+                            <td>{{ item.fleet_name }}</td>
+                            <td>{{ item.PlateNumber }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if item.current_status == 'Idle' else ('primary' if item.current_status == 'InTransit' else 'danger') }}">
+                                    {{ item.current_status }}
+                                </span>
+                            </td>
+                            <td>{{ item.max_weight_kg }}</td>
+                            <td>{{ item.max_volume_m3 }}</td>
+                            <td>{{ item.current_load }} / {{ item.current_vol_load }}</td>
+                            <td>
+                                <div class="progress">
+                                    {% set percent = (item.current_load / item.max_weight_kg * 100) | round(1) %}
+                                    <div class="progress-bar bg-{{ 'warning' if percent > 80 else 'info' }}" role="progressbar" style="width: {{ percent }}%">
+                                        {{ percent }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 月度绩效查询 (调用存储过程) -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-dark text-white">车队月度安全与效率报表 (AI分析辅助)</div>
+            <div class="card-body">
+                <div class="row g-2 align-items-center mb-3">
+                    <div class="col-auto">
+                        <select id="fleetSelect" class="form-select">
+                            {% for fleet in all_fleets %}
+                            <option value="{{ fleet.FleetID }}">{{ fleet.fleet_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <input type="month" id="monthInput" class="form-control" value="2026-01">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" onclick="loadReport()">生成报表</button>
+                    </div>
+                </div>
+
+                <div id="reportResult" style="display:none;">
+                    <hr>
+                    <h5>报表结果：<span id="resFleetName"></span> - <span id="resMonth"></span></h5>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            总运单数
+                            <span class="badge bg-primary rounded-pill" id="resOrders">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            异常事件总数
+                            <span class="badge bg-danger rounded-pill" id="resExceptions">0</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            累计罚款金额
+                            <span class="badge bg-warning text-dark rounded-pill" id="resFines">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 司机绩效追踪 -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-secondary text-white">司机绩效与异常追踪</div>
+            <div class="card-body">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-12">
+                        <select id="driverSelect" class="form-select">
+                            <option value="" disabled selected>选择司机...</option>
+                            {% for d in drivers %}
+                            <option value="{{ d.StaffID }}">{{ d.full_name }} ({{ d.fleet_name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="date" id="startDate" class="form-control" value="2026-01-01">
+                    </div>
+                    <div class="col-md-5">
+                        <input type="date" id="endDate" class="form-control" value="2026-01-31">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success w-100" onclick="loadDriverReport()">查询</button>
+                    </div>
+                </div>
+
+                <div id="driverResult" style="display:none;">
+                    <hr>
+                    <div class="alert alert-info py-2">
+                        在此期间运单总数: <strong id="drvOrderCount" style="font-size:1.2em"></strong> 单
+                    </div>
+                    <h6>异常记录详情:</h6>
+                    <div class="list-group" id="drvExceptionList" style="max-height: 200px; overflow-y: auto;">
+                        <!-- JS 填充 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadReport() {
+    const fleetId = document.getElementById('fleetSelect').value;
+    const month = document.getElementById('monthInput').value; // YYYY-MM
+    
+    if(!month) {
+        alert("请选择月份");
+        return;
+    }
+
+    fetch(`/api/monthly_performance/${fleetId}/${month}`)
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('reportResult').style.display = 'block';
+                document.getElementById('resFleetName').innerText = data.data.fleet_name;
+                document.getElementById('resMonth').innerText = month;
+                document.getElementById('resOrders').innerText = data.data.total_orders;
+                document.getElementById('resExceptions').innerText = data.data.total_exceptions;
+                document.getElementById('resFines').innerText = data.data.total_fines;
+            } else {
+                alert("查询失败: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("请求错误");
+        }); 
+}
+</script>
+<script>
+function loadDriverReport() {
+    const driverId = document.getElementById('driverSelect').value;
+    const start = document.getElementById('startDate').value; 
+    const end = document.getElementById('endDate').value;
+    
+    if(!driverId) { alert("请选择司机"); return; }
+    
+    fetch(`/api/driver_performance/${driverId}?start=${start}&end=${end}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('driverResult').style.display = 'block';
+                document.getElementById('drvOrderCount').innerText = data.order_count;
+                
+                const list = document.getElementById('drvExceptionList');
+                list.innerHTML = '';
+                
+                if(data.exceptions.length === 0) {
+                    list.innerHTML = '<div class="list-group-item text-muted">无异常记录</div>';
+                } else {
+                    data.exceptions.forEach(ex => {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item';
+                        item.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-danger">${ex.type}</h6>
+                                <small>${ex.time}</small>
+                            </div>
+                            <p class="mb-1">${ex.desc}</p>
+                            <small class="text-muted">罚款: ¥${ex.fine} | 状态: ${ex.status}</small>
+                        `;
+                        list.appendChild(item);
+                    });
+                }
+            } else {
+                alert("查询错误: " + data.message);
+            }
+        });
+}
+</script>
+{% endblock %}

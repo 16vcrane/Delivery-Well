@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">登记异常</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('exception_management') }}">
+                    <input type="hidden" name="action" value="register">
+                    <div class="mb-3">
+                        <label class="form-label">涉事车辆</label>
+                        <select class="form-select" name="plate_number" required>
+                            {% for v in vehicles %}
+                            <option value="{{ v.PlateNumber }}">{{ v.PlateNumber }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">责任司机 (可选)</label>
+                        <select class="form-select" name="driver_id">
+                            <option value="">-- 未确定/无 --</option>
+                            {% for d in drivers %}
+                            <option value="{{ d.StaffID }}">{{ d.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">异常类型</label>
+                        <select class="form-select" name="type">
+                            <option value="TransitException">运输中异常 (事故/延误)</option>
+                            <option value="IdleException">空闲时异常 (维修/检查)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-control" name="description" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">罚款金额</label>
+                        <input type="number" step="0.01" class="form-control" name="fine" value="0">
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">提交报告</button>
+                    <div class="form-text mt-2">提示：提交后车辆状态将自动锁定为"异常"。</div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">异常监控大屏</div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>车辆</th>
+                            <th>类型</th>
+                            <th>描述</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in exceptions %}
+                        <tr class="{{ 'table-danger' if e.handle_status == 'Unhandled' else '' }}">
+                            <td>{{ e.exception_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ e.PlateNumber }}</td>
+                            <td>{{ "运输异常" if e.exception_type == 'TransitException' else '勤务异常' }}</td>
+                            <td>{{ e.description }}</td>
+                            <td>
+                                {% if e.handle_status == 'Unhandled' %}
+                                <span class="badge bg-danger">未处理</span>
+                                {% else %}
+                                <span class="badge bg-success">已解决</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if e.handle_status == 'Unhandled' %}
+                                <form method="POST" action="{{ url_for('exception_management') }}">
+                                    <input type="hidden" name="action" value="resolve">
+                                    <input type="hidden" name="record_id" value="{{ e.RecordID }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">标记处理</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

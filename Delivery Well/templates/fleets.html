@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">车队管理</h2>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Add Fleet Form -->
+        <div class="card mb-4">
+            <div class="card-header">添加新车队</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('fleet_management') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="fleet_name" class="form-label">车队名称</label>
+                        <input type="text" class="form-control" id="fleet_name" name="fleet_name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="center_id" class="form-label">所属配送中心</label>
+                        <select class="form-select" id="center_id" name="center_id" required>
+                            {% for center in centers %}
+                            <option value="{{ center.CenterID }}">{{ center.location_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">添加车队</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Fleet List -->
+        <div class="card">
+            <div class="card-header">现有车队列表</div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>车队名称</th>
+                            <th>所属配送中心</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fleet in fleets %}
+                        <tr>
+                            <td>{{ fleet.FleetID }}</td>
+                            <td>{{ fleet.fleet_name }}</td>
+                            <td>{{ fleet.location_name }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center">暂无车队数据</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

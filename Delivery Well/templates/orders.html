@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- 1. 新建运单 -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-info text-white">1. 创建新运单</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('order_management') }}">
+                    <input type="hidden" name="action" value="create">
+                    <div class="mb-3">
+                        <label class="form-label">货物重量 (kg)</label>
+                        <input type="number" step="0.01" class="form-control" name="weight" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">货物体积 (m³)</label>
+                        <input type="number" step="0.01" class="form-control" name="volume" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">目的地</label>
+                        <textarea class="form-control" name="destination" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100 text-white">创建运单</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 分配运单 -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning">2. 调度分配 (待处理)</div>
+            <div class="card-body">
+                {% if pending_orders %}
+                <form method="POST" action="{{ url_for('order_management') }}">
+                    <input type="hidden" name="action" value="assign">
+                    <div class="mb-3">
+                        <label class="form-label">选择待分配运单</label>
+                        <select class="form-select" name="order_id" required>
+                            {% for order in pending_orders %}
+                            <option value="{{ order.OrderID }}">单号:{{ order.OrderID }} - {{ order.weight_kg }}kg / {{ order.volume_m3 }}m³ -> {{ order.destination }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">指派车辆</label>
+                        <select class="form-select" name="vehicle_plate" required>
+                            <option value="" disabled selected>请选择车辆 (仅显示正常车辆)</option>
+                            {% for v in vehicles %}
+                            <option value="{{ v.PlateNumber }}">
+                                {{ v.PlateNumber }} [{{ v.current_status }}] (Max: {{ v.max_weight_kg }}kg / {{ v.max_volume_m3 }}m³)
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text text-muted">注意：若分配导致超载或体积不足，系统将拒绝。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">指派司机</label>
+                        <select class="form-select" name="driver_id" required>
+                            <option value="" disabled selected>请选择司机</option>
+                            {% for driver in drivers %}
+                            <option value="{{ driver.StaffID }}">
+                                {{ driver.full_name }} ({{ driver.fleet_name }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">确认分配</button>
+                </form>
+                {% else %}
+                <p class="text-center text-muted py-3">没有待分配的运单</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 所有订单列表 -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">运单总览</div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <table class="table table-sm" style="font-size: 0.9em;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>重量</th>
+                            <th>体积</th>
+                            <th>目的地</th>
+                            <th>车辆</th>
+                            <th>司机</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in all_orders %}
+                        <tr>
+                            <td>{{ order.OrderID }}</td>
+                            <td>{{ order.weight_kg }}</td>
+                            <td>{{ order.volume_m3 }}</td>
+                            <td>{{ order.destination }}</td>
+                            <td>{{ order.AssignedVehicleID if order.AssignedVehicleID else '-' }}</td>
+                            <td>{{ order.DriverName if order.DriverName else '-' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'secondary' if order.order_status=='Pending' else ('primary' if order.order_status=='Assigned' else 'success') }}">
+                                    {{ order.order_status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if order.order_status == 'Assigned' %}
+                                <a href="{{ url_for('complete_order', order_id=order.OrderID) }}" class="btn btn-sm btn-outline-success">签收</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

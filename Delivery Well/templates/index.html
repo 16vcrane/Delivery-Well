@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">系统概览</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">待分配运单</h5>
+                        <p class="card-text display-6">{{ pending_orders_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">运输中车辆</h5>
+                        <p class="card-text display-6">{{ intransit_vehicles_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">未处理异常</h5>
+                        <p class="card-text display-6">{{ unhandled_exceptions_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">当前空闲车辆</h5>
+                        <p class="card-text display-6">{{ idle_vehicles_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">欢迎使用</div>
+            <div class="card-body">
+                <p>请使用左侧导航菜单进行操作。</p>
+                <ul>
+                    <li><strong>人员管理</strong>：录入和查看司机/调度信息。</li>
+                    <li><strong>车辆管理</strong>：录入新车，查看车辆状态。</li>
+                    <li><strong>运单调度</strong>：创建新运单，分配运单给车辆（自动载重检查）。</li>
+                    <li><strong>异常监控</strong>：登记和处理异常事件。</li>
+                    <li><strong>统计报表</strong>：查看车队月度绩效。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

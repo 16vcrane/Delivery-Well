@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧物流管理系统</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { min-height: 100vh; background-color: #343a40; color: white; }
+        .sidebar a { color: #rgba(255,255,255,.75); text-decoration: none; padding: 10px 20px; display: block; }
+        .sidebar a:hover, .sidebar a.active { background-color: #495057; color: white; border-left: 4px solid #0d6efd; }
+        .main-content { padding: 20px; }
+        .card { margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,.05); }
+        .status-badge { font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar p-0">
+            <div class="p-3 text-center border-bottom border-secondary">
+                <h4><i class="fas fa-truck-moving"></i> 物流管理</h4>
+            </div>
+            <div class="mt-3">
+                <a href="{{ url_for('index') }}" class="{{ 'active' if request.path == '/' else '' }}">
+                    <i class="fas fa-home me-2"></i> 首页概览
+                </a>
+                <a href="{{ url_for('fleet_management') }}" class="{{ 'active' if 'fleets' in request.path else '' }}">
+                    <i class="fas fa-building me-2"></i> 车队管理
+                </a>
+                <a href="{{ url_for('staff_management') }}" class="{{ 'active' if 'staff' in request.path else '' }}">
+                    <i class="fas fa-users me-2"></i> 人员管理
+                </a>
+                <a href="{{ url_for('vehicle_management') }}" class="{{ 'active' if 'vehicles' in request.path else '' }}">
+                    <i class="fas fa-truck me-2"></i> 车辆管理
+                </a>
+                <a href="{{ url_for('order_management') }}" class="{{ 'active' if 'orders' in request.path else '' }}">
+                    <i class="fas fa-clipboard-list me-2"></i> 运单调度
+                </a>
+                <a href="{{ url_for('exception_management') }}" class="{{ 'active' if 'exceptions' in request.path else '' }}">
+                    <i class="fas fa-exclamation-triangle me-2"></i> 异常监控
+                </a>
+                <a href="{{ url_for('reports') }}" class="{{ 'active' if 'reports' in request.path else '' }}">
+                    <i class="fas fa-chart-line me-2"></i> 统计报表
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 main-content">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
